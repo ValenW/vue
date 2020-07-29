@@ -16,8 +16,10 @@ export function initMixin (Vue: Class<Component>) {
   Vue.prototype._init = function (options?: Object) {
     const vm: Component = this
     // a uid
+    // 组件唯一标识
     vm._uid = uid++
 
+    // 性能检测相关代码
     let startTag, endTag
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
@@ -29,6 +31,7 @@ export function initMixin (Vue: Class<Component>) {
     // a flag to avoid this being observed
     vm._isVue = true
     // merge options
+    // 合并Vue初始化options和用户传入options
     if (options && options._isComponent) {
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
@@ -41,6 +44,8 @@ export function initMixin (Vue: Class<Component>) {
         vm
       )
     }
+
+    // 初始化vm的Proxy对象_renderProxy, 如果没有原生Proxy则直接赋值为vm
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
       initProxy(vm)
@@ -49,13 +54,25 @@ export function initMixin (Vue: Class<Component>) {
     }
     // expose real self
     vm._self = vm
+    // 生命周期相关变量的初始化
+    // $children/$parent/$root/$refs
+    // 将当前组件加入到第一个非抽象的父组件$children中
     initLifecycle(vm)
+    // vm的事件监听初始化, 绑定父组件附加在当前组件的监听函数
     initEvents(vm)
+    // $slots/$scopedSlots/$attrs/$listeners
+    // render函数初始化_c/$createElement
     initRender(vm)
+    // 调用beforeCreate生命周期的回调函数
     callHook(vm, 'beforeCreate')
+    // 将inject成员注入到vm上
+    // 和provide是一对, 将第一个provide相同key的parent上的value加到当前组件上
     initInjections(vm) // resolve injections before data/props
+    // 初始化vm的_props/methods/_data/computed/watch
     initState(vm)
+    // 初始化_provide, vm.$provide = options.provide()
     initProvide(vm) // resolve provide after data/props
+    // 回调生命周期函数
     callHook(vm, 'created')
 
     /* istanbul ignore if */
