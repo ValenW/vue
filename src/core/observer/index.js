@@ -43,6 +43,7 @@ export class Observer {
     this.value = value
     this.dep = new Dep()
     this.vmCount = 0
+    // 将当前实例挂载到观察对象的__ob__属性上
     def(value, '__ob__', this)
     if (Array.isArray(value)) {
       if (hasProto) {
@@ -146,6 +147,7 @@ export function defineReactive (
     return
   }
 
+  // 初始化预定义的存取器函数
   // cater for pre-defined getter/setters
   const getter = property && property.get
   const setter = property && property.set
@@ -153,12 +155,15 @@ export function defineReactive (
     val = obj[key]
   }
 
+  // 判断是否需要递归观察子对象, 将子对象转换为getter/setter并返回ob
   let childOb = !shallow && observe(val)
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
     get: function reactiveGetter () {
+      // 通过执行getter或value获得当前值
       const value = getter ? getter.call(obj) : val
+      // 收集依赖
       if (Dep.target) {
         dep.depend()
         if (childOb) {
@@ -171,7 +176,9 @@ export function defineReactive (
       return value
     },
     set: function reactiveSetter (newVal) {
+      // 通过getter得到旧值或直接赋值为val
       const value = getter ? getter.call(obj) : val
+      // 新旧相同, newVal !== newVal && value !== value 判断两者同为NaN
       /* eslint-disable no-self-compare */
       if (newVal === value || (newVal !== newVal && value !== value)) {
         return
@@ -180,6 +187,7 @@ export function defineReactive (
       if (process.env.NODE_ENV !== 'production' && customSetter) {
         customSetter()
       }
+      // 无setter直接返回
       // #7981: for accessor properties without setter
       if (getter && !setter) return
       if (setter) {
@@ -187,7 +195,9 @@ export function defineReactive (
       } else {
         val = newVal
       }
+      // 若新值是对象, 观察并更新子对象ob
       childOb = !shallow && observe(newVal)
+      // 派发更新
       dep.notify()
     }
   })
