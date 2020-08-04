@@ -28,6 +28,7 @@ export default class Dep {
     remove(this.subs, sub)
   }
 
+  // 将观察对象和当前watcher监听器建立联系
   depend () {
     if (Dep.target) {
       Dep.target.addDep(this)

@@ -726,6 +726,7 @@
     remove(this.subs, sub);
   };
 
+  // 将观察对象和当前watcher监听器建立联系
   Dep.prototype.depend = function depend () {
     if (Dep.target) {
       Dep.target.addDep(this);
@@ -933,6 +934,7 @@
       }
       this.observeArray(value);
     } else {
+      // 遍历对象中每一个属性, 转换为getter/setter
       this.walk(value);
     }
   };
@@ -1030,6 +1032,7 @@
     // cater for pre-defined getter/setters
     var getter = property && property.get;
     var setter = property && property.set;
+    // 只写属性
     if ((!getter || setter) && arguments.length === 2) {
       val = obj[key];
     }
@@ -1047,6 +1050,7 @@
           dep.depend();
           if (childOb) {
             childOb.dep.depend();
+            // 特殊处理数组对象的依赖
             if (Array.isArray(value)) {
               dependArray(value);
             }
@@ -1066,7 +1070,7 @@
         if (customSetter) {
           customSetter();
         }
-        // 无setter直接返回
+        // 只读属性直接返回
         // #7981: for accessor properties without setter
         if (getter && !setter) { return }
         if (setter) {
@@ -3504,9 +3508,11 @@
     // so that we get proper render context inside it.
     // args order: tag, data, children, normalizationType, alwaysNormalize
     // internal version is used by render functions compiled from templates
+    // template生成的render的渲染方法
     vm._c = function (a, b, c, d) { return createElement(vm, a, b, c, d, false); };
     // normalization is always applied for the public version, used in
     // user-written render functions.
+    // 用户自定义render的渲染方法
     vm.$createElement = function (a, b, c, d) { return createElement(vm, a, b, c, d, true); };
 
     // $attrs & $listeners are exposed for easier HOC creation.
@@ -3774,8 +3780,10 @@
     vm._events = Object.create(null);
     vm._hasHookEvent = false;
     // init parent attached events
+    // 获取父组件上的附加事件
     var listeners = vm.$options._parentListeners;
     if (listeners) {
+      // 注册自定义事件到当前组件
       updateComponentListeners(vm, listeners);
     }
   }
@@ -3920,6 +3928,7 @@
     var options = vm.$options;
 
     // locate first non-abstract parent
+    // 将当前组件插入到第一个非抽象的组件children数组里
     var parent = options.parent;
     if (parent && !options.abstract) {
       while (parent.$options.abstract && parent.$parent) {
@@ -4971,8 +4980,10 @@
     Vue.prototype._init = function (options) {
       var vm = this;
       // a uid
+      // 组件唯一标识
       vm._uid = uid$3++;
 
+      // 性能检测相关代码
       var startTag, endTag;
       /* istanbul ignore if */
       if (config.performance && mark) {
@@ -4984,6 +4995,7 @@
       // a flag to avoid this being observed
       vm._isVue = true;
       // merge options
+      // 合并Vue初始化options和用户传入options
       if (options && options._isComponent) {
         // optimize internal component instantiation
         // since dynamic options merging is pretty slow, and none of the
@@ -4996,19 +5008,33 @@
           vm
         );
       }
+
+      // 初始化vm的Proxy对象_renderProxy, 如果没有原生Proxy则直接赋值为vm
       /* istanbul ignore else */
       {
         initProxy(vm);
       }
       // expose real self
       vm._self = vm;
+      // 生命周期相关变量的初始化
+      // $children/$parent/$root/$refs
+      // 将当前组件加入到第一个非抽象的父组件$children中
       initLifecycle(vm);
+      // vm的事件监听初始化, 绑定父组件附加在当前组件的监听函数
       initEvents(vm);
+      // $slots/$scopedSlots/$attrs/$listeners
+      // render函数初始化_c/$createElement
       initRender(vm);
+      // 调用beforeCreate生命周期的回调函数
       callHook(vm, 'beforeCreate');
+      // 将inject成员注入到vm上
+      // 和provide是一对, 将第一个provide相同key的parent上的value加到当前组件上
       initInjections(vm); // resolve injections before data/props
+      // 初始化vm的_props/methods/_data/computed/watch
       initState(vm);
+      // 初始化_provide, vm.$provide = options.provide()
       initProvide(vm); // resolve provide after data/props
+      // 回调生命周期函数
       callHook(vm, 'created');
 
       /* istanbul ignore if */

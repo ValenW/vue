@@ -53,6 +53,7 @@ export class Observer {
       }
       this.observeArray(value)
     } else {
+      // 遍历对象中每一个属性, 转换为getter/setter
       this.walk(value)
     }
   }
@@ -151,6 +152,7 @@ export function defineReactive (
   // cater for pre-defined getter/setters
   const getter = property && property.get
   const setter = property && property.set
+  // 只写属性
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }
@@ -168,6 +170,7 @@ export function defineReactive (
         dep.depend()
         if (childOb) {
           childOb.dep.depend()
+          // 特殊处理数组对象的依赖
           if (Array.isArray(value)) {
             dependArray(value)
           }
@@ -187,7 +190,7 @@ export function defineReactive (
       if (process.env.NODE_ENV !== 'production' && customSetter) {
         customSetter()
       }
-      // 无setter直接返回
+      // 只读属性直接返回
       // #7981: for accessor properties without setter
       if (getter && !setter) return
       if (setter) {
