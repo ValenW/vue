@@ -12,6 +12,9 @@
     "dist/*.js",
     "types/*.d.ts"
   ],
+  "resolutions": {
+    "bin-wrapper": "npm:bin-wrapper-china"
+  },
   "sideEffects": false,
   "scripts": {
     "dev": "rollup -w -c scripts/config.js --sourcemap --environment TARGET:web-full-dev",

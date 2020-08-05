@@ -858,9 +858,11 @@
    * dynamically accessing methods on Array prototype
    */
 
+  // 使用数组原型创建新对象
   var arrayProto = Array.prototype;
   var arrayMethods = Object.create(arrayProto);
 
+  // 会修改数组的方法
   var methodsToPatch = [
     'push',
     'pop',
@@ -877,11 +879,13 @@
   methodsToPatch.forEach(function (method) {
     // cache original method
     var original = arrayProto[method];
+    // 调用Object.defineProperty重新定义方法
     def(arrayMethods, method, function mutator () {
       var args = [], len = arguments.length;
       while ( len-- ) args[ len ] = arguments[ len ];
 
       var result = original.apply(this, args);
+      // 获取数组对象的ob
       var ob = this.__ob__;
       var inserted;
       switch (method) {
@@ -893,8 +897,10 @@
           inserted = args.slice(2);
           break
       }
+      // 将新插入数据转换为响应式数据
       if (inserted) { ob.observeArray(inserted); }
       // notify change
+      // 发送数组修改通知
       ob.dep.notify();
       return result
     });
@@ -927,11 +933,12 @@
     // 将当前实例挂载到观察对象的__ob__属性上
     def(value, '__ob__', this);
     if (Array.isArray(value)) {
-      if (hasProto) {
+      if (hasProto) { // __proto__, 浏览器兼容
         protoAugment(value, arrayMethods);
       } else {
         copyAugment(value, arrayMethods, arrayKeys);
       }
+      // 将每个数组元素转换为响应式对象
       this.observeArray(value);
     } else {
       // 遍历对象中每一个属性, 转换为getter/setter
@@ -4470,6 +4477,7 @@
     if (typeof expOrFn === 'function') {
       this.getter = expOrFn;
     } else {
+      // 用于user watcher, 解析返回一个函数获取路径的值, 如`person.name`
       this.getter = parsePath(expOrFn);
       if (!this.getter) {
         this.getter = noop;

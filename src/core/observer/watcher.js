@@ -79,6 +79,7 @@ export default class Watcher {
     if (typeof expOrFn === 'function') {
       this.getter = expOrFn
     } else {
+      // 用于user watcher, 解析返回一个函数获取路径的值, 如`person.name`
       this.getter = parsePath(expOrFn)
       if (!this.getter) {
         this.getter = noop

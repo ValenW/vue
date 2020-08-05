@@ -46,11 +46,12 @@ export class Observer {
     // 将当前实例挂载到观察对象的__ob__属性上
     def(value, '__ob__', this)
     if (Array.isArray(value)) {
-      if (hasProto) {
+      if (hasProto) { // __proto__, 浏览器兼容
         protoAugment(value, arrayMethods)
       } else {
         copyAugment(value, arrayMethods, arrayKeys)
       }
+      // 将每个数组元素转换为响应式对象
       this.observeArray(value)
     } else {
       // 遍历对象中每一个属性, 转换为getter/setter
