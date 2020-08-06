@@ -4968,11 +4968,14 @@
       options
     ) {
       var vm = this;
+      // cb是option, 则先解析options再调用
       if (isPlainObject(cb)) {
         return createWatcher(vm, expOrFn, cb, options)
       }
       options = options || {};
+      // 标记为user watcher
       options.user = true;
+      // 创建watcher对象
       var watcher = new Watcher(vm, expOrFn, cb, options);
       if (options.immediate) {
         try {
@@ -4981,6 +4984,7 @@
           handleError(error, vm, ("callback for immediate watcher \"" + (watcher.expression) + "\""));
         }
       }
+      // 返回取消监听的方法
       return function unwatchFn () {
         watcher.teardown();
       }
