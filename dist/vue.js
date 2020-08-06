@@ -1104,15 +1104,20 @@
       warn(("Cannot set reactive property on undefined, null, or primitive value: " + ((target))));
     }
     if (Array.isArray(target) && isValidArrayIndex(key)) {
+      // 可能插入到末尾, 会超过最大长度
       target.length = Math.max(target.length, key);
+      // 使用响应式splice方法进行插入数据
       target.splice(key, 1, val);
       return val
     }
+    // key已在对象中直接赋值
     if (key in target && !(key in Object.prototype)) {
       target[key] = val;
       return val
     }
     var ob = (target).__ob__;
+    // 如果target是vue实例或者是$data, 发送警告
+    // $data.ob.vmCount = 1, 其他则为0
     if (target._isVue || (ob && ob.vmCount)) {
       warn(
         'Avoid adding reactive properties to a Vue instance or its root $data ' +
@@ -1120,10 +1125,12 @@
       );
       return val
     }
+    // 非响应式对象, 直接赋值
     if (!ob) {
       target[key] = val;
       return val
     }
+    // 将key设置为响应式数据
     defineReactive$$1(ob.value, key, val);
     ob.dep.notify();
     return val
@@ -5122,10 +5129,15 @@
     this._init(options);
   }
 
+  // _init
   initMixin(Vue);
+  // $data/$props/$set/$delete/$watch
   stateMixin(Vue);
+  // $on/$once/$off/$emit
   eventsMixin(Vue);
+  // _update/$forceUpdate/$destroy
   lifecycleMixin(Vue);
+  // $nextTick/_render
   renderMixin(Vue);
 
   /*  */
