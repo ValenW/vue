@@ -3395,6 +3395,7 @@
     children,
     normalizationType
   ) {
+    // 用于渲染vnode的data不能是响应式数据
     if (isDef(data) && isDef((data).__ob__)) {
       warn(
         "Avoid using observed data object as vnode data: " + (JSON.stringify(data)) + "\n" +
@@ -3403,6 +3404,7 @@
       );
       return createEmptyVNode()
     }
+    // <component :is="myComponent">
     // object syntax in v-bind
     if (isDef(data) && isDef(data.is)) {
       tag = data.is;
@@ -3422,6 +3424,7 @@
         );
       }
     }
+    // 处理默认插槽
     // support single function children as default scoped slot
     if (Array.isArray(children) &&
       typeof children[0] === 'function'
@@ -3431,14 +3434,17 @@
       children.length = 0;
     }
     if (normalizationType === ALWAYS_NORMALIZE) {
+      // 将用户render全部展开为一维数组, 方便处理
       children = normalizeChildren(children);
     } else if (normalizationType === SIMPLE_NORMALIZE) {
+      // 将二维数组展开为一维数组
       children = simpleNormalizeChildren(children);
     }
     var vnode, ns;
     if (typeof tag === 'string') {
       var Ctor;
       ns = (context.$vnode && context.$vnode.ns) || config.getTagNamespace(tag);
+      // HTML保留标签
       if (config.isReservedTag(tag)) {
         // platform built-in elements
         if (isDef(data) && isDef(data.nativeOn)) {
@@ -3453,8 +3459,11 @@
         );
       } else if ((!data || !data.pre) && isDef(Ctor = resolveAsset(context.$options, 'components', tag))) {
         // component
+        // 自定义组件
+        // 查找自定义组件声明并根据Ctor创建组件的VNode
         vnode = createComponent(Ctor, data, context, children, tag);
       } else {
+        // 自定义html标签
         // unknown or unlisted namespaced elements
         // check at runtime because it may get assigned a namespace when its
         // parent normalizes children
@@ -3464,6 +3473,7 @@
         );
       }
     } else {
+      // tag非字符串, 则当做组件调用, createComponent
       // direct component options / constructor
       vnode = createComponent(tag, data, context, children);
     }
@@ -3966,6 +3976,7 @@
   }
 
   function lifecycleMixin (Vue) {
+    // 将vnode渲染成真实DOM, 首次和数据更新都会调用
     Vue.prototype._update = function (vnode, hydrating) {
       var vm = this;
       var prevEl = vm.$el;
@@ -3974,6 +3985,7 @@
       vm._vnode = vnode;
       // Vue.prototype.__patch__ is injected in entry points
       // based on the rendering backend used.
+      // 首次渲染
       if (!prevVnode) {
         // initial render
         vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */);
@@ -5906,13 +5918,17 @@
     var i, j;
     var cbs = {};
 
+    // modules 节点属性/事件/样式的操作
+    // nodeOps 节点操作
     var modules = backend.modules;
     var nodeOps = backend.nodeOps;
 
+    // 将modules中所有钩子函数存入cbs数组
     for (i = 0; i < hooks.length; ++i) {
       cbs[hooks[i]] = [];
       for (j = 0; j < modules.length; ++j) {
         if (isDef(modules[j][hooks[i]])) {
+          // cbs['updated'] = [updateAttrs, updateClass, ...]
           cbs[hooks[i]].push(modules[j][hooks[i]]);
         }
       }
@@ -5967,6 +5983,7 @@
       ownerArray,
       index
     ) {
+      // 当有elm(已经渲染过)和ownerArray时, 将vnode及其子节点备份, 防止潜在错误
       if (isDef(vnode.elm) && isDef(ownerArray)) {
         // This vnode was used in a previous render!
         // now it's used as a new node, overwriting its elm would cause
@@ -5976,6 +5993,7 @@
         vnode = ownerArray[index] = cloneVNode(vnode);
       }
 
+      // 处理是组件的情况
       vnode.isRootInsert = !nested; // for transition enter check
       if (createComponent(vnode, insertedVnodeQueue, parentElm, refElm)) {
         return
@@ -5990,6 +6008,7 @@
             creatingElmInVPre++;
           }
           if (isUnknownElement$$1(vnode, creatingElmInVPre)) {
+            // 自定义标签
             warn(
               'Unknown custom element: <' + tag + '> - did you ' +
               'register the component correctly? For recursive components, ' +
@@ -6002,6 +6021,7 @@
         vnode.elm = vnode.ns
           ? nodeOps.createElementNS(vnode.ns, tag)
           : nodeOps.createElement(tag, vnode);
+        // 设置样式定义域
         setScope(vnode);
 
         /* istanbul ignore if */
@@ -6017,9 +6037,11 @@
           creatingElmInVPre--;
         }
       } else if (isTrue(vnode.isComment)) {
+        // 注释节点
         vnode.elm = nodeOps.createComment(vnode.text);
         insert(parentElm, vnode.elm, refElm);
       } else {
+        // 文本节点
         vnode.elm = nodeOps.createTextNode(vnode.text);
         insert(parentElm, vnode.elm, refElm);
       }
@@ -6105,9 +6127,11 @@
           checkDuplicateKeys(children);
         }
         for (var i = 0; i < children.length; ++i) {
+          // 遍历children渲染vnode为dom
           createElm(children[i], insertedVnodeQueue, vnode.elm, null, true, children, i);
         }
       } else if (isPrimitive(vnode.text)) {
+        // 没有children, 创建文本节点挂载到elm下
         nodeOps.appendChild(vnode.elm, nodeOps.createTextNode(String(vnode.text)));
       }
     }
@@ -6120,10 +6144,12 @@
     }
 
     function invokeCreateHooks (vnode, insertedVnodeQueue) {
+      // 调用vnode的create钩子函数
       for (var i$1 = 0; i$1 < cbs.create.length; ++i$1) {
         cbs.create[i$1](emptyNode, vnode);
       }
       i = vnode.data.hook; // Reuse variable
+      // 调用组件的钩子函数, insert需要推迟到真正插入时调用
       if (isDef(i)) {
         if (isDef(i.create)) { i.create(emptyNode, vnode); }
         if (isDef(i.insert)) { insertedVnodeQueue.push(vnode); }
@@ -6516,7 +6542,9 @@
     }
 
     return function patch (oldVnode, vnode, hydrating, removeOnly) {
+      // 新vnode不存在
       if (isUndef(vnode)) {
+        // 执行destroy回调
         if (isDef(oldVnode)) { invokeDestroyHook(oldVnode); }
         return
       }
@@ -6526,14 +6554,19 @@
 
       if (isUndef(oldVnode)) {
         // empty mount (likely as component), create new root element
+        // 创建新的vnode, 但不挂载在dom tree, 因为oldNode不存在, 无法定位挂载位置
         isInitialPatch = true;
         createElm(vnode, insertedVnodeQueue);
       } else {
+        // 新老Vnode都存在, 更新node
         var isRealElement = isDef(oldVnode.nodeType);
+        // same vnode: key,sel in snabbdom, key, tag, ect in vue
         if (!isRealElement && sameVnode(oldVnode, vnode)) {
           // patch existing root node
+          // 更新节点, diff算法
           patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly);
         } else {
+          // 第一个参数是真实dom, 首次渲染vnode
           if (isRealElement) {
             // mounting to a real element
             // check if this is server-rendered content and if we can perform
@@ -6558,6 +6591,7 @@
             }
             // either not server-rendered, or hydration failed.
             // create an empty node and replace it
+            // 将真实dom转换为vnode, 存储在oldVnode中
             oldVnode = emptyNodeAt(oldVnode);
           }
 
@@ -6572,10 +6606,11 @@
             // extremely rare edge case: do not insert if old element is in a
             // leaving transition. Only happens when combining transition +
             // keep-alive + HOCs. (#4590)
-            oldElm._leaveCb ? null : parentElm,
-            nodeOps.nextSibling(oldElm)
+            oldElm._leaveCb ? null : parentElm, // 有leaveCb时不挂载vnode
+            nodeOps.nextSibling(oldElm) // 会插入到该元素之前
           );
 
+          // 处理父节点占位符
           // update parent placeholder node element, recursively
           if (isDef(vnode.parent)) {
             var ancestor = vnode.parent;

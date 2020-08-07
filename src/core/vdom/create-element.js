@@ -51,6 +51,7 @@ export function _createElement (
   children?: any,
   normalizationType?: number
 ): VNode | Array<VNode> {
+  // 用于渲染vnode的data不能是响应式数据
   if (isDef(data) && isDef((data: any).__ob__)) {
     process.env.NODE_ENV !== 'production' && warn(
       `Avoid using observed data object as vnode data: ${JSON.stringify(data)}\n` +
@@ -59,6 +60,7 @@ export function _createElement (
     )
     return createEmptyVNode()
   }
+  // <component :is="myComponent">
   // object syntax in v-bind
   if (isDef(data) && isDef(data.is)) {
     tag = data.is
@@ -79,6 +81,7 @@ export function _createElement (
       )
     }
   }
+  // 处理默认插槽
   // support single function children as default scoped slot
   if (Array.isArray(children) &&
     typeof children[0] === 'function'
@@ -88,14 +91,17 @@ export function _createElement (
     children.length = 0
   }
   if (normalizationType === ALWAYS_NORMALIZE) {
+    // 将用户render全部展开为一维数组, 方便处理
     children = normalizeChildren(children)
   } else if (normalizationType === SIMPLE_NORMALIZE) {
+    // 将二维数组展开为一维数组
     children = simpleNormalizeChildren(children)
   }
   let vnode, ns
   if (typeof tag === 'string') {
     let Ctor
     ns = (context.$vnode && context.$vnode.ns) || config.getTagNamespace(tag)
+    // HTML保留标签
     if (config.isReservedTag(tag)) {
       // platform built-in elements
       if (process.env.NODE_ENV !== 'production' && isDef(data) && isDef(data.nativeOn)) {
@@ -110,8 +116,11 @@ export function _createElement (
       )
     } else if ((!data || !data.pre) && isDef(Ctor = resolveAsset(context.$options, 'components', tag))) {
       // component
+      // 自定义组件
+      // 查找自定义组件声明并根据Ctor创建组件的VNode
       vnode = createComponent(Ctor, data, context, children, tag)
     } else {
+      // 自定义html标签
       // unknown or unlisted namespaced elements
       // check at runtime because it may get assigned a namespace when its
       // parent normalizes children
@@ -121,6 +130,7 @@ export function _createElement (
       )
     }
   } else {
+    // tag非字符串, 则当做组件调用, createComponent
     // direct component options / constructor
     vnode = createComponent(tag, data, context, children)
   }
