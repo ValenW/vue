@@ -44,6 +44,7 @@ const componentVNodeHooks = {
       const mountedNode: any = vnode // work around flow
       componentVNodeHooks.prepatch(mountedNode, mountedNode)
     } else {
+      // 创建组件的实例
       const child = vnode.componentInstance = createComponentInstanceForVnode(
         vnode,
         activeInstance
@@ -112,6 +113,7 @@ export function createComponent (
   const baseCtor = context.$options._base
 
   // plain options object: turn it into a constructor
+  // ctor是optoins, 则通过Vue.extend创造一个子组件的构造函数
   if (isObject(Ctor)) {
     Ctor = baseCtor.extend(Ctor)
   }
@@ -127,6 +129,7 @@ export function createComponent (
 
   // async component
   let asyncFactory
+  // 没有cid视为异步组件
   if (isUndef(Ctor.cid)) {
     asyncFactory = Ctor
     Ctor = resolveAsyncComponent(asyncFactory, baseCtor)
@@ -148,9 +151,11 @@ export function createComponent (
 
   // resolve constructor options in case global mixins are applied after
   // component constructor creation
+  // 合并当前组件选项和mixin混入的选项
   resolveConstructorOptions(Ctor)
 
   // transform component v-model data into props & events
+  // 处理v-model指令
   if (isDef(data.model)) {
     transformModel(Ctor.options, data)
   }
@@ -183,10 +188,14 @@ export function createComponent (
   }
 
   // install component management hooks onto the placeholder node
+  // 安装组件的钩子函数, init/prepatch/insert/destroy
+  // 准备data.hook中的钩子函数
   installComponentHooks(data)
 
   // return a placeholder vnode
   const name = Ctor.options.name || tag
+  // 创建自定义组件的Vnode, 设置自定义组件名称
+  // this.componentOptions = componentOptions
   const vnode = new VNode(
     `vue-component-${Ctor.cid}${name ? `-${name}` : ''}`,
     data, undefined, undefined, undefined, context,
@@ -220,6 +229,7 @@ export function createComponentInstanceForVnode (
     options.render = inlineTemplate.render
     options.staticRenderFns = inlineTemplate.staticRenderFns
   }
+  // 创建组件实例
   return new vnode.componentOptions.Ctor(options)
 }
 

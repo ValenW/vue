@@ -18,8 +18,10 @@ export function initExtend (Vue: GlobalAPI) {
    */
   Vue.extend = function (extendOptions: Object): Function {
     extendOptions = extendOptions || {}
+    // Vue构造函数
     const Super = this
     const SuperId = Super.cid
+    // 从缓存中加载组件的构造函数
     const cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {})
     if (cachedCtors[SuperId]) {
       return cachedCtors[SuperId]
@@ -27,21 +29,26 @@ export function initExtend (Vue: GlobalAPI) {
 
     const name = extendOptions.name || Super.options.name
     if (process.env.NODE_ENV !== 'production' && name) {
+      // 验证组件名合法, 因为可以从外部直接调用
       validateComponentName(name)
     }
 
     const Sub = function VueComponent (options) {
+      // 调用init初始化组件
       this._init(options)
     }
+    // 原型继承自Vue
     Sub.prototype = Object.create(Super.prototype)
     Sub.prototype.constructor = Sub
     Sub.cid = cid++
+    // 合并optoins
     Sub.options = mergeOptions(
       Super.options,
       extendOptions
     )
     Sub['super'] = Super
 
+    // 初始化props, computed, 
     // For props and computed properties, we define the proxy getters on
     // the Vue instances at extension time, on the extended prototype. This
     // avoids Object.defineProperty calls for each instance created.
@@ -52,6 +59,7 @@ export function initExtend (Vue: GlobalAPI) {
       initComputed(Sub)
     }
 
+    // 挂载静态成员extend, mixin, use, components, directives, filters
     // allow further extension/mixin/plugin usage
     Sub.extend = Super.extend
     Sub.mixin = Super.mixin
@@ -63,6 +71,7 @@ export function initExtend (Vue: GlobalAPI) {
       Sub[type] = Super[type]
     })
     // enable recursive self-lookup
+    // 吧组件构造函数保存到Ctor.options.components.comp = Ctor
     if (name) {
       Sub.options.components[name] = Sub
     }
@@ -74,6 +83,7 @@ export function initExtend (Vue: GlobalAPI) {
     Sub.extendOptions = extendOptions
     Sub.sealedOptions = extend({}, Sub.options)
 
+    // 缓存并返回
     // cache constructor
     cachedCtors[SuperId] = Sub
     return Sub

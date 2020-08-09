@@ -19,6 +19,7 @@ export function createCompilerCreator (baseCompile: Function): Function {
         (tip ? tips : errors).push(msg)
       }
 
+      // 合并baseOptions和options
       if (options) {
         if (process.env.NODE_ENV !== 'production' && options.outputSourceRange) {
           // $flow-disable-line
@@ -59,6 +60,7 @@ export function createCompilerCreator (baseCompile: Function): Function {
 
       finalOptions.warn = warn
 
+      // 调用baseCompile将模板编译为render
       const compiled = baseCompile(template.trim(), finalOptions)
       if (process.env.NODE_ENV !== 'production') {
         detectErrors(compiled.ast, warn)

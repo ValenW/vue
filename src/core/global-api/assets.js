@@ -21,11 +21,15 @@ export function initAssetRegisters (Vue: GlobalAPI) {
         }
         if (type === 'component' && isPlainObject(definition)) {
           definition.name = definition.name || id
+          // 将组件配置转换为组件的构造函数
+          // this.options._base就是Vue构造函数, 在global-api:initGlobalAPI中定义
           definition = this.options._base.extend(definition)
         }
         if (type === 'directive' && typeof definition === 'function') {
           definition = { bind: definition, update: definition }
         }
+        // 全局注册, 这里的this是Vue的构造函数
+        // this.options['components']['myComp'] = definition
         this.options[type + 's'][id] = definition
         return definition
       }

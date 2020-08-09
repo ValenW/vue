@@ -222,6 +222,8 @@ export function createPatchFunction (backend) {
     if (isDef(i)) {
       const isReactivated = isDef(vnode.componentInstance) && i.keepAlive
       if (isDef(i = i.hook) && isDef(i = i.init)) {
+        // 调用init钩子函数创建和挂载组件实例
+        // init中创建组件的真实dom, 并挂载到vnode.elm上
         i(vnode, false /* hydrating */)
       }
       // after calling the init hook, if the vnode is a child component
@@ -229,7 +231,9 @@ export function createPatchFunction (backend) {
       // component also has set the placeholder vnode's elm.
       // in that case we can just return the element and be done.
       if (isDef(vnode.componentInstance)) {
+        // 调用钩子函数, 初始化属性/样式/事件等
         initComponent(vnode, insertedVnodeQueue)
+        // 将组件对应dom插入到父元素中
         insert(parentElm, vnode.elm, refElm)
         if (isTrue(isReactivated)) {
           reactivateComponent(vnode, insertedVnodeQueue, parentElm, refElm)

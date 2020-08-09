@@ -80,6 +80,7 @@ export function parse (
   template: string,
   options: CompilerOptions
 ): ASTElement | void {
+  // 1. 解析options成员
   warn = options.warn || baseWarn
 
   platformIsPreTag = options.isPreTag || no
@@ -94,6 +95,7 @@ export function parse (
 
   delimiters = options.delimiters
 
+  // 定义些变量和函数
   const stack = []
   const preserveWhitespace = options.preserveWhitespace !== false
   const whitespaceOption = options.whitespace
@@ -201,6 +203,7 @@ export function parse (
     }
   }
 
+  // 3. 解析模板, 借鉴了siplehtmlparser.js
   parseHTML(template, {
     warn,
     expectHTML: options.expectHTML,
@@ -210,6 +213,7 @@ export function parse (
     shouldDecodeNewlinesForHref: options.shouldDecodeNewlinesForHref,
     shouldKeepComment: options.comments,
     outputSourceRange: options.outputSourceRange,
+    // 解析到开始标签, 结束标签, 文本标签, 注释标签时执行的回调, 用于生产AST
     start (tag, attrs, unary, start, end) {
       // check namespace.
       // inherit parent ns if there is one
@@ -221,6 +225,7 @@ export function parse (
         attrs = guardIESVGBug(attrs)
       }
 
+      // 生成ast对象
       let element: ASTElement = createASTElement(tag, attrs, currentParent)
       if (ns) {
         element.ns = ns
@@ -265,6 +270,7 @@ export function parse (
       }
 
       if (!inVPre) {
+        // 处理v-pre指令
         processPre(element)
         if (element.pre) {
           inVPre = true
@@ -277,6 +283,7 @@ export function parse (
         processRawAttrs(element)
       } else if (!element.processed) {
         // structural directives
+        // 处理结构化指令: v-for, v-if/else/ifes, once
         processFor(element)
         processIf(element)
         processOnce(element)

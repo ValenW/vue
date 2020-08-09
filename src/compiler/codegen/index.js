@@ -77,6 +77,8 @@ export function genElement (el: ASTElement, state: CodegenState): string {
     } else {
       let data
       if (!el.plain || (el.pre && state.maybeComponent(el))) {
+        // 生成元素属性, 指令, 事件等
+        // 包括各种指令, 如genDirectives(model/text/html)
         data = genData(el, state)
       }
 
@@ -533,13 +535,16 @@ function genNode (node: ASTNode, state: CodegenState): string {
 }
 
 export function genText (text: ASTText | ASTExpression): string {
-  return `_v(${text.type === 2
+  // _v => createTextVNode
+  return `_v(${text.type === 2 // 表达式类型
     ? text.expression // no need for () because already wrapped in _s()
+    // 修正string中特别的换行, 防止特别情况
     : transformSpecialNewlines(JSON.stringify(text.text))
   })`
 }
 
 export function genComment (comment: ASTText): string {
+  // json.stringfy作用是为字符串加上引号
   return `_e(${JSON.stringify(comment.text)})`
 }
 
