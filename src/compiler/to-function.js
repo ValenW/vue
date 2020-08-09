@@ -49,6 +49,9 @@ export function createCompileToFunctionFn (compile: Function): Function {
     }
 
     // check cache
+    // 1. 读取缓存中的CompiledFunctionResult对象, key是模板内容
+    // 如果改动了插值表达式的符号(默认双大括号)
+    // 则key也要考虑options.delimiters
     const key = options.delimiters
       ? String(options.delimiters) + template
       : template
@@ -57,8 +60,10 @@ export function createCompileToFunctionFn (compile: Function): Function {
     }
 
     // compile
+    // 2. 将模板编译为编译对象(render, staticRenderFns), 字符串形式的js代码
     const compiled = compile(template, options)
 
+    // 3. 收集模板编译过程中的error/tips并打印
     // check compilation errors/tips
     if (process.env.NODE_ENV !== 'production') {
       if (compiled.errors && compiled.errors.length) {
@@ -87,6 +92,7 @@ export function createCompileToFunctionFn (compile: Function): Function {
       }
     }
 
+    // 4. 将字符串js转换为js方法, 即 `new Function(codeString)`
     // turn code into functions
     const res = {}
     const fnGenErrors = []
@@ -109,6 +115,7 @@ export function createCompileToFunctionFn (compile: Function): Function {
       }
     }
 
+    // 5. 缓存并返回(render, staticRender)
     return (cache[key] = res)
   }
 }
